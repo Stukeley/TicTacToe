@@ -5,3 +5,12 @@
 
 <h2>Potwierdzenie adresu e-mail</h2>
 Na adres @ViewBag.Email została wysłana wiadomość. Proszę potwierdzić ten adres, klikając zawarty w niej link.
+
+@section Scripts
+    {
+    <script>
+        $(document).ready(function () {
+            EmailConfirmation("@ViewBag.Email");
+        });
+    </script>
+}

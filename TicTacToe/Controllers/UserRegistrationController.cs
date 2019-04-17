@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Threading.Tasks;
 using TicTacToe.Models;
 using TicTacToe.Services;
@@ -40,9 +39,6 @@ namespace TicTacToe.Controllers
 			}
 
 			ViewBag.Email = email;
-			user.IsEmailConfirmed = true;
-			user.EmailConfirmationDate = DateTime.Now;
-			await _userService.UpdateUser(user);
 			return View();
 		}
 
