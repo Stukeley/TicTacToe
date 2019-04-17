@@ -54,6 +54,7 @@ namespace TicTacToe
 			var options = new RewriteOptions().AddRewrite("NewUser", "/UserRegistration/Index", false);
 			app.UseRewriter(options);
 
+			app.UseWebSockets();
 			app.UseCommuncationMiddleware();
 
 			app.UseMvc(routes =>
