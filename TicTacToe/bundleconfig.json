@@ -1,0 +1,28 @@
+[
+  {
+    "inputFiles": [
+      "wwwroot/css/site.css"
+    ],
+    "outputFileName": "wwwroot/css/site.min.css"
+  },
+  {
+    "includeInProject": true,
+    "inputFiles": [
+      "wwwroot/app/js/scripts1.js",
+      "wwwroot/app/js/scripts2.js"
+    ],
+    "outputFileName": "wwwroot/js/site.js",
+    "sourceMap": true
+  },
+  {
+    "inputFiles": [
+      "wwwroot/js/site.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "outputFileName": "wwwroot/js/site.min.js",
+    "sourceMap": false
+  }
+]
