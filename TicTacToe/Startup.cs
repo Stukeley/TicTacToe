@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Globalization;
 using TicTacToe.Extensions;
 using TicTacToe.Models;
 using TicTacToe.Services;
@@ -16,9 +19,17 @@ namespace TicTacToe
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddLocalization(options =>
+			options.ResourcesPath = "Localization");
+
 			services.AddMvc();
 			services.AddSingleton<IUserService, UserService>();
 			services.AddRouting();
+
+			services.AddSession(o =>
+			{
+				o.IdleTimeout = TimeSpan.FromMinutes(30);
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,6 +46,7 @@ namespace TicTacToe
 			}
 
 			app.UseStaticFiles();
+			app.UseSession();
 
 			var routeBuilder = new RouteBuilder(app);
 			routeBuilder.MapGet("CreateUser", context =>
@@ -56,6 +68,19 @@ namespace TicTacToe
 
 			app.UseWebSockets();
 			app.UseCommuncationMiddleware();
+
+			var supportedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+			var localizationOptions = new RequestLocalizationOptions
+			{
+				DefaultRequestCulture = new RequestCulture("pl-PL"),
+				SupportedCultures = supportedCultures,
+				SupportedUICultures = supportedCultures
+			};
+
+			localizationOptions.RequestCultureProviders.Clear();
+			localizationOptions.RequestCultureProviders.Add(new CultureProviderResolverService());
+
+			app.UseRequestLocalization(localizationOptions);
 
 			app.UseMvc(routes =>
 			{
