@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +23,8 @@ namespace TicTacToe
 			services.AddLocalization(options =>
 			options.ResourcesPath = "Localization");
 
-			services.AddMvc();
+			services.AddMvc().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, options =>
+				options.ResourcesPath = "Localization").AddDataAnnotationsLocalization();
 			services.AddSingleton<IUserService, UserService>();
 			services.AddRouting();
 
