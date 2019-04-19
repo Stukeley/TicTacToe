@@ -1,4 +1,12 @@
-﻿using TicTacToe.Options;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using TicTacToe.Logging;
+using TicTacToe.Options;
 
 namespace TicTacToe.Extensions
 {
