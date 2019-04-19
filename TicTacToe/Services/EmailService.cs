@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -9,27 +11,37 @@ namespace TicTacToe.Services
 	public class EmailService : IEmailService
 	{
 		private EmailServiceOptions _emailServiceOptions;
+		private readonly ILogger<EmailService> _logger;
 
-		public EmailService(IOptions<EmailServiceOptions> emailServiceOptions)
+		public EmailService(IOptions<EmailServiceOptions> emailServiceOptions, ILogger<EmailService> logger)
 		{
 			_emailServiceOptions = emailServiceOptions.Value;
+			_logger = logger;
 		}
 
 		public Task SendEmail(string emailTo, string subject, string message)
 		{
-			using (var client = new SmtpClient(_emailServiceOptions.MailServer, int.Parse(_emailServiceOptions.MailPort)))
+			try
 			{
-				if (bool.Parse(_emailServiceOptions.UseSSL) == true)
+				_logger.LogInformation($"##Start metody SendEmail## Rozpoczęcie wysyłania wiadomości do {emailTo}");
+				using (var client = new SmtpClient(_emailServiceOptions.MailServer, int.Parse(_emailServiceOptions.MailPort)))
 				{
-					client.EnableSsl = true;
-				}
+					if (bool.Parse(_emailServiceOptions.UseSSL) == true)
+					{
+						client.EnableSsl = true;
+					}
 
-				if (!string.IsNullOrEmpty(_emailServiceOptions.UserId))
-				{
-					client.Credentials = new NetworkCredential(_emailServiceOptions.UserId, _emailServiceOptions.Password);
-				}
+					if (!string.IsNullOrEmpty(_emailServiceOptions.UserId))
+					{
+						client.Credentials = new NetworkCredential(_emailServiceOptions.UserId, _emailServiceOptions.Password);
+					}
 
-				client.Send(new MailMessage("example@example.com", emailTo, subject, message));
+					client.Send(new MailMessage("example@example.com", emailTo, subject, message));
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"Nie można wysłać wiadomości e-mail {ex}");
 			}
 
 			return Task.CompletedTask;

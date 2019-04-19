@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using TicTacToe.Models;
 using TicTacToe.Services;
+using Microsoft.Extensions.Logging;
 
 namespace TicTacToe.Controllers
 {
@@ -11,11 +12,13 @@ namespace TicTacToe.Controllers
 	{
 		private readonly IUserService _userService;
 		private readonly IEmailService _emailService;
+		private readonly ILogger<UserRegistrationController> _logger;
 
-		public UserRegistrationController(IUserService userService, IEmailService emailService)
+		public UserRegistrationController(IUserService userService, IEmailService emailService, ILogger<UserRegistrationController> logger)
 		{
 			_userService = userService;
 			_emailService = emailService;
+			_logger = logger;
 		}
 
 		[HttpPost]
@@ -35,6 +38,8 @@ namespace TicTacToe.Controllers
 		[HttpGet]
 		public async Task<IActionResult> EmailConfirmation(string email)
 		{
+			_logger.LogInformation($"##Start## Proces potwierdzenia adresu {email}");
+
 			var user = await _userService.GetUserByEmail(email);
 
 			var urlAction = new UrlActionContext
