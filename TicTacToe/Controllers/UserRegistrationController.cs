@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using System;
 using System.Threading.Tasks;
 using TicTacToe.Models;
 using TicTacToe.Services;
@@ -7,11 +9,13 @@ namespace TicTacToe.Controllers
 {
 	public class UserRegistrationController : Controller
 	{
-		private IUserService _userService;
+		private readonly IUserService _userService;
+		private readonly IEmailService _emailService;
 
-		public UserRegistrationController(IUserService userService)
+		public UserRegistrationController(IUserService userService, IEmailService emailService)
 		{
 			_userService = userService;
+			_emailService = emailService;
 		}
 
 		[HttpPost]
@@ -32,6 +36,25 @@ namespace TicTacToe.Controllers
 		public async Task<IActionResult> EmailConfirmation(string email)
 		{
 			var user = await _userService.GetUserByEmail(email);
+
+			var urlAction = new UrlActionContext
+			{
+				Action = "ConfirmEmail",
+				Controller = "UserRegistration",
+				Values = new { email },
+				Protocol = Request.Scheme,
+				Host = Request.Host.ToString()
+			};
+
+			var message = $"Dziękujemy za rejestrację na naszej stronie. Aby potwierdzić adres email, proszę kliknąć tutaj " + $"{Url.Action(urlAction)}";
+
+			try
+			{
+				_emailService.SendEmail(email, "Potwierdzenie adresu e-mail w grze Kółko i krzyżyk", message);
+			}
+			catch (Exception e)
+			{
+			}
 
 			if (user?.IsEmailConfirmed == true)
 			{
