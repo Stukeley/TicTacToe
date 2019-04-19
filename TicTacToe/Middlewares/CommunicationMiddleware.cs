@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -41,6 +42,55 @@ namespace TicTacToe.Middlewares
 				user.IsEmailConfirmed = true;
 				user.EmailConfirmationDate = DateTime.Now;
 				_userService.UpdateUser(user).Wait();
+			}
+		}
+
+		private async Task ProcessGameInvitationConfirmation(HttpContext context)
+		{
+			var id = context.Request.Query["id"];
+			if (string.IsNullOrEmpty(id))
+			{
+				await context.Response.WriteAsync("Nieprawidłowe żądanie: Wymagany jest identyfikator id");
+			}
+
+			var gameInvitationService = context.RequestServices.GetService<IGameInvitationService>();
+
+			var gameInvitationModel = await gameInvitationService.Get(Guid.Parse(id));
+
+			if (gameInvitationModel.IsConfirmed)
+			{
+				await context.Response.WriteAsync(JsonConvert.SerializeObject(new
+				{
+					Result = "OK",
+					Email = gameInvitationModel.InvitedBy,
+					gameInvitationModel.EmailTo
+				}));
+			}
+			else
+			{
+				await context.Response.WriteAsync("Oczekiwanie na potwierdzenie zaproszenia do gry");
+			}
+		}
+
+		private async Task ProcessGameInvitationConfirmation(HttpContext context, WebSocket webSocket, CancellationToken ct, string parameters)
+		{
+			var gameInvitationService = context.RequestServices.GetService<IGameInvitationService>();
+			var id = Guid.Parse(parameters);
+			var gameInvitationModel = await gameInvitationService.Get(id);
+
+			while (!ct.IsCancellationRequested && !webSocket.CloseStatus.HasValue && gameInvitationModel?.IsConfirmed == false)
+			{
+				await SendStringAsync(webSocket, JsonConvert.SerializeObject(new
+				{
+					Result = "OK",
+					Email = gameInvitationModel.InvitedBy,
+					gameInvitationModel.EmailTo,
+					gameInvitationModel.Id
+				}), ct);
+
+				Task.Delay(500).Wait();
+
+				gameInvitationModel = await gameInvitationService.Get(id);
 			}
 		}
 
@@ -112,11 +162,19 @@ namespace TicTacToe.Middlewares
 					case "CheckEmailConfirmationStatus":
 						await ProcessEmailConfirmation(context, webSocket, ct, command.Parameters.ToString());
 						break;
+
+					case "CheckGameInvitationConfirmationStatus":
+						await ProcessGameInvitationConfirmation(context, webSocket, ct, command.Parameters.ToString());
+						break;
 				}
 			}
 			else if (context.Request.Path.Equals("/CheckEmailConfirmationStatus"))
 			{
 				await ProcessEmailConfirmation(context);
+			}
+			else if (context.Request.Path.Equals("/CheckGameInvitationConfirmationStatus"))
+			{
+				await ProcessGameInvitationConfirmation(context);
 			}
 			else
 			{

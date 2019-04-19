@@ -9,6 +9,17 @@
     });
 }
 
+function CheckGameInvitationConfirmationStatus(id) {
+    $.get("/GameInvitationConfirmation?id=" + id, function (data) {
+        if (data.result === "OK") {
+            if (interval !== null) {
+                clearInterval(interval);
+            }
+            window.location.href = "/GameSession/Index" + id;
+        }
+    });
+}
+
 var openSocket = function (parameter, strAction) {
     if (interval !== null) {
         clearInterval(interval);
@@ -23,6 +34,10 @@ var openSocket = function (parameter, strAction) {
         wsUri = protocol + "//" + window.location.host + "/CheckEmailConfirmationStatus";
         operation = "CheckEmailConfirmationStatus";
     }
+    else if (strAction == "GameInvitation") {
+        wsUri = protocol + "//" + window.location.host + "/GameInvitationConfirmation";
+        operation = "CheckGameInvitationConfirmationStatus";
+    }
 
     let socket = new WebSocket(wsUri);
     socket.onmessage = function (response) {
@@ -30,10 +45,17 @@ var openSocket = function (parameter, strAction) {
         if (strAction == "Email" && response.data == "OK") {
             window.location.href = "/GameInvitation?email=" + parameter;
         }
+        else if (strAction == "GameInvitation") {
+            let data = $.parseJSON(response.data);
+
+            if (data.result == "OK") {
+                window.location.href = "/GameSession/Index" + data.id;
+            }
+        }
     };
 
     socket.onopen = function () {
-        var json = JSON.stringify({
+        let json = JSON.stringify({
             "Operation": operation,
             "Parameters": parameter
         });
