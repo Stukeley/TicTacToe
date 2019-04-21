@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
 using TicTacToe.Extensions;
+using TicTacToe.Filters;
 using TicTacToe.Models;
 using TicTacToe.Options;
 using TicTacToe.Services;
@@ -35,11 +36,13 @@ namespace TicTacToe
 			services.AddLocalization(options =>
 			options.ResourcesPath = "Localization");
 
-			services.AddMvc().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, options =>
+			services.AddMvc(o =>
+			o.Filters.Add(typeof(DetectMobileFilter))).AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, options =>
 				options.ResourcesPath = "Localization").AddDataAnnotationsLocalization();
 
 			services.AddSingleton<IUserService, UserService>();
 			services.AddSingleton<IGameInvitationService, GameInvitationService>();
+			services.AddSingleton<IGameSessionService, GameSessionService>();
 
 			services.Configure<EmailServiceOptions>(_configuration.GetSection("Email"));
 

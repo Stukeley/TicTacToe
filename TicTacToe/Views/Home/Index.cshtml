@@ -1,14 +1,13 @@
 ﻿@{
     ViewData["Title"] = "Strona główna";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
 <div class="row">
     <div class="col-lg-12">
-        <h2>@Localizer["Title"]</h2>
+        @section Desktop {<h2>@Localizer["DesktopTitle"]</h2>}
+        @section Mobile {<h2>@Localizer["MobileTitle"]</h2>}
         <div class="alert alert-info">
             <p>Kółko i krzyżyk jest grą turową dla dwóch osób.</p>
-            <p>Dwóch graczy wybiera, kto będzie grał krzyżykiem, a kto kółkiem. Następnie na przemian oznaczają po jednym polu siatki 3x3.</p>
+            <p>Dwóch graczy wybiera, kto będzie grał krzyżykami, a kto kółkami. Następnie na przemian oznaczają po jednym polu siatki 3×3.</p>
             <p>Wygrywa gracz, który zdoła umieścić trzy swoje znaki w linii pionowej, poziomej lub na ukos.</p>
         </div>
         <p>

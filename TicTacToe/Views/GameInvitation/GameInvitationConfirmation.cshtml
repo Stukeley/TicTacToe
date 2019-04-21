@@ -3,13 +3,13 @@
     ViewData["Title"] = "Potwierdzenie zaproszenia do gry";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<h1>@Localizer["Użytkownik {0} został przez Ciebie zaproszony do gry Kółko i krzyżyk. Proszę czekać, aż się połączy", Model.EmailTo]</h1>
-
-@section Scripts {
+@section Desktop{<h2>@Localizer["DesktopTitle"]</h2>}
+@section Mobile {<h2>@Localizer["MobileTitle"]</h2>}
+<h1>@Localizer["Użytkownik {0} został przez Ciebie zaproszony do gry Kółko i krzyżyk, proszę czekać, aż się połączy", Model.EmailTo]</h1>
+@section Scripts{
     <script>
         $(document).ready(function () {
-            GameInvitationConfirmation("@Model.Id");
+            GameInvitationConfirmation('@Model.Id');
         });
     </script>
 }
