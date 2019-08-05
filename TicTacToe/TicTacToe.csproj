@@ -5,7 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Account\Data\" />
+    <Folder Include="Areas\Account\Models\" />
     <Folder Include="wwwroot\lib\" />
+    <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
   <ItemGroup>

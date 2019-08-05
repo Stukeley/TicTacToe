@@ -14,6 +14,7 @@ using TicTacToe.Filters;
 using TicTacToe.Models;
 using TicTacToe.Options;
 using TicTacToe.Services;
+using TicTacToe.ViewEngines;
 
 namespace TicTacToe
 {
@@ -47,6 +48,9 @@ namespace TicTacToe
 			services.Configure<EmailServiceOptions>(_configuration.GetSection("Email"));
 
 			services.AddEmailService(_hostingEnvironment, _configuration);
+
+			services.AddTransient<IEmailTemplateRenderService, EmailTemplateRenderService>();
+			services.AddTransient<IEmailViewEngine, EmailViewEngine>();
 
 			services.AddRouting();
 
@@ -123,6 +127,8 @@ namespace TicTacToe
 
 			app.UseMvc(routes =>
 			{
+				routes.MapRoute(name: "areaRoute", template: "{area:exists}/{controller=Home}/{action=Index}");
+
 				routes.MapRoute(name: "default", template: "{controller=Home}/{action=Index}/{id?}");
 			});
 

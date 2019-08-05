@@ -3,7 +3,7 @@ using System;
 
 namespace TicTacToe.Logging
 {
-	internal class FileLogger : ILogger
+	public class FileLogger : ILogger
 	{
 		private string _categoryName;
 		private Func<string, LogLevel, bool> _filter;

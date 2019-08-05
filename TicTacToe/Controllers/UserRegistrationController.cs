@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using TicTacToe.Models;
 using TicTacToe.Services;
-using Microsoft.Extensions.Logging;
 
 namespace TicTacToe.Controllers
 {
@@ -13,12 +14,16 @@ namespace TicTacToe.Controllers
 		private readonly IUserService _userService;
 		private readonly IEmailService _emailService;
 		private readonly ILogger<UserRegistrationController> _logger;
-
 		public UserRegistrationController(IUserService userService, IEmailService emailService, ILogger<UserRegistrationController> logger)
 		{
 			_userService = userService;
 			_emailService = emailService;
 			_logger = logger;
+		}
+
+		public IActionResult Index()
+		{
+			return View();
 		}
 
 		[HttpPost]
@@ -39,9 +44,7 @@ namespace TicTacToe.Controllers
 		public async Task<IActionResult> EmailConfirmation(string email)
 		{
 			_logger.LogInformation($"##Start## Proces potwierdzenia adresu {email}");
-
 			var user = await _userService.GetUserByEmail(email);
-
 			var urlAction = new UrlActionContext
 			{
 				Action = "ConfirmEmail",
@@ -51,11 +54,19 @@ namespace TicTacToe.Controllers
 				Host = Request.Host.ToString()
 			};
 
-			var message = $"Dziękujemy za rejestrację na naszej stronie. Aby potwierdzić adres email, proszę kliknąć tutaj " + $"{Url.Action(urlAction)}";
+			var userRegistrationEmail = new UserRegistrationEmailModel
+			{
+				DisplayName = $"{user.FirstName} {user.LastName}",
+				Email = email,
+				ActionUrl = Url.Action(urlAction)
+			};
+
+			var emailRenderService = HttpContext.RequestServices.GetService<IEmailTemplateRenderService>();
+			var message = await emailRenderService.RenderTemplate("EmailTemplates/UserRegistrationEmail", userRegistrationEmail, Request.Host.ToString());
 
 			try
 			{
-				_emailService.SendEmail(email, "Potwierdzenie adresu e-mail w grze Kółko i krzyżyk", message);
+				_emailService.SendEmail(email, "Potwierdzenie adresu e-mail w grze Kółko i krzyżyk", message).Wait();
 			}
 			catch (Exception e)
 			{
@@ -63,15 +74,11 @@ namespace TicTacToe.Controllers
 
 			if (user?.IsEmailConfirmed == true)
 			{
-				return RedirectToAction("Index", "GameInvitation", new { Email = email });
+				return RedirectToAction("Index", "GameInvitation", new { email = email });
 			}
 
 			ViewBag.Email = email;
-			return View();
-		}
 
-		public IActionResult Index()
-		{
 			return View();
 		}
 	}
