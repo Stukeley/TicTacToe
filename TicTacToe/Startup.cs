@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
+using TicTacToe.Data;
 using TicTacToe.Extensions;
 using TicTacToe.Filters;
 using TicTacToe.Models;
@@ -43,6 +45,13 @@ namespace TicTacToe
 			services.AddSingleton<IUserService, UserService>();
 			services.AddSingleton<IGameInvitationService, GameInvitationService>();
 			services.AddSingleton<IGameSessionService, GameSessionService>();
+
+			var connectionString = _configuration.GetConnectionString("DefaultConnection");
+			services.AddEntityFrameworkSqlServer().AddDbContext<GameDbContext>((serviceProvider, options) => options.UseSqlServer(connectionString)
+			.UseInternalServiceProvider(serviceProvider));
+
+			var dbContextOptionsBuilder = new DbContextOptionsBuilder<GameDbContext>().UseSqlServer(connectionString);
+			services.AddSingleton(dbContextOptionsBuilder.Options);
 
 			services.Configure<EmailServiceOptions>(_configuration.GetSection("Email"));
 			services.AddEmailService(_hostingEnvironment, _configuration);
@@ -127,6 +136,11 @@ namespace TicTacToe
 			});
 
 			app.UseStatusCodePages("text/plain", "Blad HTTP - kod odpowiedzi: {0}");
+
+			using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+			{
+				scope.ServiceProvider.GetRequiredService<GameDbContext>().Database.Migrate();
+			}
 		}
 	}
 }

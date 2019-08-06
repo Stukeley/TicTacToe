@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using TicTacToe.Data;
 using TicTacToe.Models;
 using TicTacToe.Services;
 using Xunit;
@@ -21,7 +23,10 @@ namespace TicTacToe.UnitTests
 				Password = password
 			};
 
-			var userService = new UserService();
+			var dbContextOptionsBuilder = new DbContextOptionsBuilder<GameDbContext>()
+			   .UseSqlServer(@"Server=(localdb)\MSSQLLocalDB;Database=TicTacToe;Trusted_Connection=True;MultipleActiveResultSets=true");
+			var userService = new UserService(dbContextOptionsBuilder.Options);
+
 			var userAdded = await userService.RegisterUser(userModel);
 			Assert.True(userAdded);
 		}
