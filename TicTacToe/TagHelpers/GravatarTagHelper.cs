@@ -18,22 +18,30 @@ namespace TicTacToe.TagHelpers
 		}
 
 		public string Email { get; set; }
+
 		public override void Process(TagHelperContext context, TagHelperOutput output)
 		{
-			byte[] photo;
+			byte[] photo = null;
 			if (CheckIsConnected())
 			{
 				photo = GetPhoto(Email);
 			}
 			else
 			{
-				photo = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "no-photo.jpg"));
+				string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "no-photo.jpg");
+				if (File.Exists(filePath))
+				{
+					photo = File.ReadAllBytes(filePath);
+				}
 			}
 
-			string base64String = Convert.ToBase64String(photo);
-			output.TagName = "img";
-			output.Attributes.SetAttribute("src", $"data:image/jpeg;base64,{base64String}");
+			if (photo != null && photo.Length > 0)
+			{
+				output.TagName = "img";
+				output.Attributes.SetAttribute("src", $"data:image/jpeg;base64,{Convert.ToBase64String(photo)}");
+			}
 		}
+
 
 		private bool CheckIsConnected()
 		{

@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Halcyon.Web.HAL.Json;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,12 +21,8 @@ namespace TicTacToe
 {
 	public class Startup
 	{
-		// This method gets called by the runtime. Use this method to add services to the container.
-		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-
 		public IConfiguration _configuration { get; }
 		public IHostingEnvironment _hostingEnvironment { get; }
-
 		public Startup(IConfiguration configuration, IHostingEnvironment hostingEnvironment)
 		{
 			_configuration = configuration;
@@ -34,26 +31,25 @@ namespace TicTacToe
 
 		public void ConfigureCommonServices(IServiceCollection services)
 		{
-			services.AddLocalization(options =>
-			options.ResourcesPath = "Localization");
-
+			services.AddLocalization(options => options.ResourcesPath = "Localization");
 			services.AddMvc(o =>
-			o.Filters.Add(typeof(DetectMobileFilter))).AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, options =>
-				options.ResourcesPath = "Localization").AddDataAnnotationsLocalization();
+			{
+				o.Filters.Add(typeof(DetectMobileFilter));
+
+				o.OutputFormatters.RemoveType<JsonOutputFormatter>();
+				o.OutputFormatters.Add(new JsonHalOutputFormatter(new string[] { "application/hal+json", "application/vnd.example.hal+json", "application/vnd.example.hal.v1+json" }));
+			}).AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix, options => options.ResourcesPath = "Localization").AddDataAnnotationsLocalization();
 
 			services.AddSingleton<IUserService, UserService>();
 			services.AddSingleton<IGameInvitationService, GameInvitationService>();
 			services.AddSingleton<IGameSessionService, GameSessionService>();
 
 			services.Configure<EmailServiceOptions>(_configuration.GetSection("Email"));
-
 			services.AddEmailService(_hostingEnvironment, _configuration);
-
 			services.AddTransient<IEmailTemplateRenderService, EmailTemplateRenderService>();
-			services.AddTransient<IEmailViewEngine, EmailViewEngine>();
+			services.AddTransient<EmailViewEngine, EmailViewEngine>();
 
 			services.AddRouting();
-
 			services.AddSession(o =>
 			{
 				o.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -75,7 +71,6 @@ namespace TicTacToe
 			ConfigureCommonServices(services);
 		}
 
-		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			if (env.IsDevelopment())
@@ -100,14 +95,10 @@ namespace TicTacToe
 				var password = context.Request.Query["password"];
 				var userService = context.RequestServices.GetService<IUserService>();
 				userService.RegisterUser(new UserModel { FirstName = firstName, LastName = lastName, Email = email, Password = password });
-				return context.Response.WriteAsync($"Użytkownik {firstName} {lastName} został pomyślnie utworzony.");
+				return context.Response.WriteAsync($"Uzytkownik {firstName} {lastName} zostal pomyslnie utworzony.");
 			});
-
 			var newUserRoutes = routeBuilder.Build();
 			app.UseRouter(newUserRoutes);
-
-			var options = new RewriteOptions().AddRewrite("NewUser", "/UserRegistration/Index", false);
-			app.UseRewriter(options);
 
 			app.UseWebSockets();
 			app.UseCommuncationMiddleware();
@@ -127,12 +118,15 @@ namespace TicTacToe
 
 			app.UseMvc(routes =>
 			{
-				routes.MapRoute(name: "areaRoute", template: "{area:exists}/{controller=Home}/{action=Index}");
+				routes.MapRoute(name: "areaRoute",
+						template: "{area:exists}/{controller=Home}/{action=Index}");
 
-				routes.MapRoute(name: "default", template: "{controller=Home}/{action=Index}/{id?}");
+				routes.MapRoute(
+					name: "default",
+					template: "{controller=Home}/{action=Index}/{id?}");
 			});
 
-			app.UseStatusCodePages("text/plain", "Błąd HTTP - kod odpowiedzi: {0}");
+			app.UseStatusCodePages("text/plain", "Blad HTTP - kod odpowiedzi: {0}");
 		}
 	}
 }

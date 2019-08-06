@@ -48,7 +48,7 @@ namespace TicTacToe.Controllers
 
 					var emailRenderService = HttpContext.RequestServices.GetService<IEmailTemplateRenderService>();
 					var message = await emailRenderService.RenderTemplate<InvitationEmailModel>("EmailTemplates/InvitationEmail", invitationModel, Request.Host.ToString());
-					await emailService.SendEmail(gameInvitationModel.EmailTo, _stringLocalizer["Zaproszenie do gry Kółko i krzyżyk"], message);
+					await emailService.SendEmail(gameInvitationModel.EmailTo, _stringLocalizer["Zaproszenie do gry w kółko i krzyżyk"], message);
 				}
 				catch
 				{
@@ -69,13 +69,20 @@ namespace TicTacToe.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult ConfirmGameInvitation(Guid id, [FromServices]IGameInvitationService gameInvitationService)
+		public async Task<IActionResult> ConfirmGameInvitation(Guid id, [FromServices]IGameInvitationService gameInvitationService)
 		{
-			var gameInvitation = gameInvitationService.Get(id).Result;
+			var gameInvitation = await gameInvitationService.Get(id);
 			gameInvitation.IsConfirmed = true;
 			gameInvitation.ConfirmationDate = DateTime.Now;
-			gameInvitationService.Update(gameInvitation);
-			return RedirectToAction("Index", "GameSession", new { id = id });
+			await gameInvitationService.Update(gameInvitation);
+			Request.HttpContext.Session.SetString("email", gameInvitation.EmailTo);
+			await _userService.RegisterUser(new UserModel
+			{
+				Email = gameInvitation.EmailTo,
+				EmailConfirmationDate = DateTime.Now,
+				IsEmailConfirmed = true
+			});
+			return RedirectToAction("Index", "GameSession", new { id });
 		}
 	}
 }
