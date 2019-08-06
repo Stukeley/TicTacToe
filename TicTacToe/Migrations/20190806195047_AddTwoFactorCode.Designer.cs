@@ -11,9 +11,10 @@ using TicTacToe.Data;
 namespace TicTacToe.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190806195047_AddTwoFactorCode")]
+    partial class AddTwoFactorCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

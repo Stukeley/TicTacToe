@@ -5,7 +5,7 @@ namespace TicTacToe.Extensions
 {
 	public static class CommuncationMiddlewareExtension
 	{
-		public static IApplicationBuilder UseCommuncationMiddleware(this IApplicationBuilder app)
+		public static IApplicationBuilder UseCommunicationMiddleware(this IApplicationBuilder app)
 		{
 			return app.UseMiddleware<CommunicationMiddleware>();
 		}

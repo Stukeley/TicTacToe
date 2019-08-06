@@ -1,21 +1,41 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace TicTacToe.Controllers
 {
 	public class HomeController : Controller
 	{
-		public IActionResult SetCulture(string culture)
+		public async Task<IActionResult> Index()
 		{
-			Request.HttpContext.Session.SetString("culture", culture);
-			return RedirectToAction("Index");
+			return await Task.Run(() =>
+			{
+				var culture = Request.HttpContext.Session.GetString("culture");
+				ViewBag.Language = culture;
+				return View();
+			});
 		}
 
-		public IActionResult Index()
+		public async Task<IActionResult> SetCulture(string culture)
 		{
-			var culture = Request.HttpContext.Session.GetString("culture");
-			ViewBag.Language = culture;
-			return View();
+			return await Task.Run(() =>
+			{
+				Request.HttpContext.Session.SetString("culture", culture);
+				return RedirectToAction("Index");
+			});
+		}
+
+		//[Authorize]
+		//[Authorize(Roles = "Administrator")]
+		[Authorize(Policy = "AdministratorAccessLevelPolicy")]
+		public async Task<IActionResult> SecuredPage()
+		{
+			return await Task.Run(() =>
+			{
+				ViewBag.SecureWord = "Zabezpieczona strona";
+				return View("SecuredPage");
+			});
 		}
 	}
 }
